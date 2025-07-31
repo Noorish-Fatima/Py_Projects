@@ -1,5 +1,5 @@
-import json
 import csv
+import json
 import os
 import matplotlib.pyplot as plt
 from collections import defaultdict
