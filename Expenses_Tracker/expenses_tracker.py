@@ -104,16 +104,61 @@ def plot_monthly_charts():
 
 # Show all expenses
 def show_expenses():
-    cursor.execute("SELECT date, category, amount FROM expenses ORDER BY date DESC")
+    cursor.execute("SELECT id, date, category, amount FROM expenses ORDER BY date DESC")
     rows = cursor.fetchall()
     if not rows:
         print("No expenses recorded.\n")
         return
 
     print("\n All Expenses:")
-    for i, exp in enumerate(rows, 1):
-        print(f"{i}. {exp[0]} | {exp[1]} | Rs {exp[2]:.2f}")
+    for exp in rows:
+        print(f"{exp[0]}. {exp[1]} | {exp[2]} | Rs {exp[3]:.2f}")
     print()
+# edit expenses
+def edit_expense():
+    show_expenses()
+    try:
+        exp_id = int(input("Enter the ID of the expense to edit: "))
+        cursor.execute("SELECT * FROM expenses WHERE id = ?", (exp_id,))
+        row = cursor.fetchone()
+        if not row:
+            print("Expense not found.")
+            return
+
+        new_date = input(f"Enter new date (YYYY-MM-DD) or leave blank to keep [{row[1]}]: ")
+        new_category = input(f"Enter new category or leave blank to keep [{row[2]}]: ")
+        new_amount = input(f"Enter new amount or leave blank to keep [{row[3]}]: ")
+
+        updated_date = new_date or row[1]
+        updated_category = new_category or row[2]
+        updated_amount = float(new_amount) if new_amount else row[3]
+
+        cursor.execute("UPDATE expenses SET date = ?, category = ?, amount = ? WHERE id = ?",
+                       (updated_date, updated_category, updated_amount, exp_id))
+        conn.commit()
+        print("Expense updated successfully.\n")
+    except ValueError:
+        print("Invalid input.\n")
+# delete expenses
+def delete_expense():
+    show_expenses()
+    try:
+        exp_id = int(input("Enter the ID of the expense to delete: "))
+        cursor.execute("SELECT * FROM expenses WHERE id = ?", (exp_id,))
+        row = cursor.fetchone()
+        if not row:
+            print("Expense not found.")
+            return
+
+        confirm = input(f"Are you sure you want to delete expense #{exp_id}? (y/n): ").lower()
+        if confirm == 'y':
+            cursor.execute("DELETE FROM expenses WHERE id = ?", (exp_id,))
+            conn.commit()
+            print("Expense deleted successfully.\n")
+        else:
+            print("Deletion cancelled.\n")
+    except ValueError:
+        print("Invalid input.\n")
 
 # Show total spent
 def show_total():
@@ -154,9 +199,11 @@ def menu():
         print("4. Filter by Category")
         print("5. Export to CSV")
         print("6. Import from CSV")
-        print("7. Show Total Spent")
-        print("8. Plot Monthly Chart")
-        print("9. Exit")
+        print("7. Edit Expenses")
+        print("8. Delete Expenses")
+        print("9. Show Total Spent")
+        print("10. Plot Monthly Chart")
+        print("11. Exit")
 
         choice = input("Choose an option: ")
 
@@ -173,10 +220,15 @@ def menu():
         elif choice == "6":
             import_from_csv()
         elif choice == '7':
-            show_total()
+            edit_expense()
         elif choice == '8':
+            delete_expense()
+        elif choice == '9':
+            show_total()
+        elif choice == '10':
             plot_monthly_charts()
-        elif choice == "9":
+        elif choice == "11":
+            print("Goodbye!")
             break
         else:
             print("Invalid choice. Try again.\n")
