@@ -1,6 +1,6 @@
 import sqlite3
 import csv
-import os
+import sqlite3
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from datetime import datetime
