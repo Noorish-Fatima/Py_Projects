@@ -50,14 +50,33 @@ def show_total():
     total = sum(exp["amount"] for exp in expenses)
     print(f"\n💸 Total spent: Rs {total:.2f}\n")
 
+def show_expenses_filtered(data):
+    if not data:
+        print("No expenses to show.")
+        return
+    for e in data:
+        print(f"{e['date']} | {e['category']} | ${e['amount']}")
+# Filter by month
+def filter_by_month():
+    month = input('Enter Month (MM): ')
+    year = input('Enter Year (YYYY)')
+    filtered = [e for e in expenses if e['date'].startswith(f"{year}-{month}")]
+    show_expenses_filtered(filtered)
+# Filter by Category
+def filter_by_category():
+    category = input("Enter category to filter: ").lower()
+    filtered = [e for e in expenses if e['category'].lower()== category]
+    show_expenses_filtered(filtered)
 # menu
 def menu():
     while True:
         print("=== Expense Tracker ===")
         print("1. Add Expense")
         print("2. View Expenses")
-        print("3. Show Total Spent")
-        print("4. Exit")
+        print("3. Filter by Month")
+        print("4. Filter by Category")
+        print("5. Show Total Spent")
+        print("6. Exit")
 
         choice = input("Select an option (1-4): ")
 
@@ -66,9 +85,12 @@ def menu():
         elif choice == "2":
             show_expenses()
         elif choice == "3":
-            show_total()
+            filter_by_month()
         elif choice == "4":
-            print("Goodbye!")
+            filter_by_category()
+        elif choice == '5':
+            show_total()
+        elif choice == "6":
             break
         else:
             print("Invalid choice. Try again.\n")
