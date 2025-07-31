@@ -52,6 +52,28 @@ def export_to_csv():
             print(f"Exported to {filename}")
     except Exception as e:
         print("Failed to Export: ", e)
+# Import from csv
+def import_from_csv():
+    filename = input("Enter csv File to import (default: Expenses_Tracker/expenses.csv): ")
+    if not filename:
+        filename = "Expenses_Tracker/expenses.csv"
+    try:
+        with open(filename, mode='r') as file:
+            reader = csv.DictReader(file)
+            imported = 0
+            for row in reader:
+                expense = {
+                    "date": row["date"],
+                    "category": row["category"],
+                    "amount": float(row["amount"])
+                }
+                expenses.append(expense)
+                imported+=1
+            print(f"Imported {imported} expenses from {filename}")
+    except FileNotFoundError:
+        print("File not found")
+    except Exception as e:
+        print("Failed to Import: ", e)
 
 # Show all expenses
 def show_expenses():
@@ -93,8 +115,9 @@ def menu():
         print("3. Filter by Month")
         print("4. Filter by Category")
         print("5. Export to csv")
-        print("6. Show Total Spent")
-        print("7. Exit")
+        print("6. Import from csv")
+        print("7. Show Total Spent")
+        print("8. Exit")
 
         choice = input("Choose an option: ")
 
@@ -108,9 +131,11 @@ def menu():
             filter_by_category()
         elif choice == "5":
             export_to_csv()
-        elif choice == '6':
+        elif choice == "6":
+            import_from_csv()
+        elif choice == '7':
             show_total()
-        elif choice == "7":
+        elif choice == "8":
             break
         else:
             print("Invalid choice. Try again.\n")
