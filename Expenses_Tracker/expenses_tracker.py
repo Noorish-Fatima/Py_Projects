@@ -1,5 +1,6 @@
-import csv
 import sqlite3
+import csv
+import os
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from datetime import datetime
@@ -34,7 +35,7 @@ def add_expense():
     conn.commit()
     print("Expense added!\n")
 
-# Export to csv
+# Export to CSV
 def export_to_csv():
     cursor.execute("SELECT date, category, amount FROM expenses")
     rows = cursor.fetchall()
@@ -56,7 +57,7 @@ def export_to_csv():
     except Exception as e:
         print("Failed to Export: ", e)
 
-# Import from csv
+# Import from CSV
 def import_from_csv():
     filename = input("Enter csv file to import (default: expenses.csv): ")
     if not filename:
@@ -120,7 +121,7 @@ def show_total():
     total = cursor.fetchone()[0] or 0
     print(f"\n Total spent: Rs {total:.2f}\n")
 
-# Filtered data
+# Filtered view
 def show_expenses_filtered(filtered_rows):
     if not filtered_rows:
         print("No expenses to show.")
@@ -143,7 +144,7 @@ def filter_by_category():
     rows = cursor.fetchall()
     show_expenses_filtered(rows)
 
-# Menu 
+# Menu loop
 def menu():
     while True:
         print("=== Expense Tracker ===")
@@ -185,4 +186,3 @@ menu()
 
 # Close DB on exit
 conn.close()
-
