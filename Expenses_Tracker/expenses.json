@@ -8,5 +8,35 @@
         "date": "2025-07-31",
         "category": "transport",
         "amount": 1160.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "bills",
+        "amount": 120000.0
+    },
+    {
+        "date": "2025-02-31",
+        "category": "bills",
+        "amount": 12000.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "bills",
+        "amount": 12000.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "bills",
+        "amount": 12000.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "food",
+        "amount": 550.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "transport",
+        "amount": 2250.0
     }
 ]

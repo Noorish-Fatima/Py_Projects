@@ -1,4 +1,5 @@
 import json
+import csv
 import os
 from datetime import datetime
 
@@ -33,23 +34,39 @@ def add_expense():
     expenses.append(expense)
     save_expenses(expenses)
     print("Expense added!\n")
+# Export to csv
+def export_to_csv():
+    if not expenses:
+        print("No expenses to export")
+        return
+    filename = input("Enter filename (default: expenses.csv): ")
+    if not filename:
+        filename = "Expenses_Tracker/expenses.csv"
+    
+    try:
+        with open(filename, mode='w', newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=["date", "category", "amount"])
+            writer.writeheader()
+            for expense in expenses:
+                writer.writerow(expense)
+            print(f"Exported to {filename}")
+    except Exception as e:
+        print("Failed to Export: ", e)
 
 # Show all expenses
 def show_expenses():
     if not expenses:
         print("No expenses recorded.\n")
         return
-
     print("\n All Expenses:")
     for i, exp in enumerate(expenses, 1):
         print(f"{i}. {exp['date']} | {exp['category']} | Rs {exp['amount']:.2f}")
     print()
-
 # Show total spent
 def show_total():
     total = sum(exp["amount"] for exp in expenses)
     print(f"\n💸 Total spent: Rs {total:.2f}\n")
-
+# Show filtered data
 def show_expenses_filtered(data):
     if not data:
         print("No expenses to show.")
@@ -75,10 +92,11 @@ def menu():
         print("2. View Expenses")
         print("3. Filter by Month")
         print("4. Filter by Category")
-        print("5. Show Total Spent")
-        print("6. Exit")
+        print("5. Export to csv")
+        print("6. Show Total Spent")
+        print("7. Exit")
 
-        choice = input("Select an option (1-4): ")
+        choice = input("Choose an option: ")
 
         if choice == "1":
             add_expense()
@@ -88,9 +106,11 @@ def menu():
             filter_by_month()
         elif choice == "4":
             filter_by_category()
-        elif choice == '5':
+        elif choice == "5":
+            export_to_csv()
+        elif choice == '6':
             show_total()
-        elif choice == "6":
+        elif choice == "7":
             break
         else:
             print("Invalid choice. Try again.\n")
