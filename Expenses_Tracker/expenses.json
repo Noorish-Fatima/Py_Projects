@@ -38,5 +38,10 @@
         "date": "2025-07-31",
         "category": "transport",
         "amount": 2250.0
+    },
+    {
+        "date": "2025-07-31",
+        "category": "bills",
+        "amount": 5500.0
     }
 ]

@@ -1,9 +1,11 @@
 import json
 import csv
 import os
+import matplotlib.pyplot as plt
+from collections import defaultdict
 from datetime import datetime
 
-EXPENSE_FILE = "Expenses_Tracker/expenses.json"
+EXPENSE_FILE = "expenses.json"
 
 # Load or initialize expense data
 def load_expenses():
@@ -41,7 +43,7 @@ def export_to_csv():
         return
     filename = input("Enter filename (default: expenses.csv): ")
     if not filename:
-        filename = "Expenses_Tracker/expenses.csv"
+        filename = "expenses.csv"
     
     try:
         with open(filename, mode='w', newline="") as file:
@@ -54,9 +56,9 @@ def export_to_csv():
         print("Failed to Export: ", e)
 # Import from csv
 def import_from_csv():
-    filename = input("Enter csv File to import (default: Expenses_Tracker/expenses.csv): ")
+    filename = input("Enter csv File to import (default: expenses.csv): ")
     if not filename:
-        filename = "Expenses_Tracker/expenses.csv"
+        filename = "expenses.csv"
     try:
         with open(filename, mode='r') as file:
             reader = csv.DictReader(file)
@@ -74,6 +76,27 @@ def import_from_csv():
         print("File not found")
     except Exception as e:
         print("Failed to Import: ", e)
+# Plot monthly Charts
+def plot_monthly_charts():
+    if not expenses:
+        print("No data to plot")
+        return 
+    # Group by month
+    monthly_totals = defaultdict(float)
+    for e in expenses:
+        month = e['date'][:7]
+        monthly_totals[month] += e['amount']
+    months = sorted(monthly_totals.keys())
+    totals = [monthly_totals[m] for m in months]
+
+    plt.figure(figsize=(8, 4))
+    plt.plot(months, totals, marker='o', linestyle='-', color='purple')
+    plt.title("Monthly Expenses Chart")
+    plt.xlabel('Month')
+    plt.ylabel("Toatl spent (RS)")
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
 
 # Show all expenses
 def show_expenses():
@@ -87,7 +110,7 @@ def show_expenses():
 # Show total spent
 def show_total():
     total = sum(exp["amount"] for exp in expenses)
-    print(f"\n💸 Total spent: Rs {total:.2f}\n")
+    print(f"\n Total spent: Rs {total:.2f}\n")
 # Show filtered data
 def show_expenses_filtered(data):
     if not data:
@@ -117,7 +140,8 @@ def menu():
         print("5. Export to csv")
         print("6. Import from csv")
         print("7. Show Total Spent")
-        print("8. Exit")
+        print("8. Plot Monthly Chart")
+        print("9. Exit")
 
         choice = input("Choose an option: ")
 
@@ -135,7 +159,9 @@ def menu():
             import_from_csv()
         elif choice == '7':
             show_total()
-        elif choice == "8":
+        elif choice == '8':
+            plot_monthly_charts()
+        elif choice == "9":
             break
         else:
             print("Invalid choice. Try again.\n")
