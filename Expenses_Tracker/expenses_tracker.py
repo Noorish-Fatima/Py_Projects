@@ -1,22 +1,25 @@
 import csv
-import json
-import os
+import sqlite3
 import matplotlib.pyplot as plt
 from collections import defaultdict
 from datetime import datetime
 
-EXPENSE_FILE = "expenses.json"
+DB_FILE = "expenses.db"
 
-# Load or initialize expense data
-def load_expenses():
-    if os.path.exists(EXPENSE_FILE):
-        with open(EXPENSE_FILE, "r") as file:
-            return json.load(file)
-    return []
+# Connect to SQLite DB
+conn = sqlite3.connect(DB_FILE)
+cursor = conn.cursor()
 
-def save_expenses(expenses):
-    with open(EXPENSE_FILE, "w") as file:
-        json.dump(expenses, file, indent=4)
+# Creating  table
+cursor.execute("""
+CREATE TABLE IF NOT EXISTS expenses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    date TEXT,
+    category TEXT,
+    amount REAL
+)
+""")
+conn.commit()
 
 # Add a new expense
 def add_expense():
@@ -27,36 +30,35 @@ def add_expense():
     category = input("Enter category (food, transport, bills, etc.): ").strip()
     amount = float(input("Enter amount: "))
 
-    expense = {
-        "date": date,
-        "category": category,
-        "amount": amount
-    }
-
-    expenses.append(expense)
-    save_expenses(expenses)
+    cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)", (date, category, amount))
+    conn.commit()
     print("Expense added!\n")
+
 # Export to csv
 def export_to_csv():
-    if not expenses:
+    cursor.execute("SELECT date, category, amount FROM expenses")
+    rows = cursor.fetchall()
+
+    if not rows:
         print("No expenses to export")
         return
+
     filename = input("Enter filename (default: expenses.csv): ")
     if not filename:
         filename = "expenses.csv"
-    
+
     try:
         with open(filename, mode='w', newline="") as file:
-            writer = csv.DictWriter(file, fieldnames=["date", "category", "amount"])
-            writer.writeheader()
-            for expense in expenses:
-                writer.writerow(expense)
+            writer = csv.writer(file)
+            writer.writerow(["date", "category", "amount"])
+            writer.writerows(rows)
             print(f"Exported to {filename}")
     except Exception as e:
         print("Failed to Export: ", e)
+
 # Import from csv
 def import_from_csv():
-    filename = input("Enter csv File to import (default: expenses.csv): ")
+    filename = input("Enter csv file to import (default: expenses.csv): ")
     if not filename:
         filename = "expenses.csv"
     try:
@@ -64,28 +66,29 @@ def import_from_csv():
             reader = csv.DictReader(file)
             imported = 0
             for row in reader:
-                expense = {
-                    "date": row["date"],
-                    "category": row["category"],
-                    "amount": float(row["amount"])
-                }
-                expenses.append(expense)
-                imported+=1
+                cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)",
+                               (row["date"], row["category"], float(row["amount"])))
+                imported += 1
+            conn.commit()
             print(f"Imported {imported} expenses from {filename}")
     except FileNotFoundError:
         print("File not found")
     except Exception as e:
         print("Failed to Import: ", e)
-# Plot monthly Charts
+
+# Plot monthly chart
 def plot_monthly_charts():
-    if not expenses:
+    cursor.execute("SELECT date, amount FROM expenses")
+    rows = cursor.fetchall()
+    if not rows:
         print("No data to plot")
-        return 
-    # Group by month
+        return
+
     monthly_totals = defaultdict(float)
-    for e in expenses:
-        month = e['date'][:7]
-        monthly_totals[month] += e['amount']
+    for date, amount in rows:
+        month = date[:7]
+        monthly_totals[month] += amount
+
     months = sorted(monthly_totals.keys())
     totals = [monthly_totals[m] for m in months]
 
@@ -93,43 +96,54 @@ def plot_monthly_charts():
     plt.plot(months, totals, marker='o', linestyle='-', color='purple')
     plt.title("Monthly Expenses Chart")
     plt.xlabel('Month')
-    plt.ylabel("Toatl spent (RS)")
+    plt.ylabel("Total spent (Rs)")
     plt.grid(True)
     plt.tight_layout()
     plt.show()
 
 # Show all expenses
 def show_expenses():
-    if not expenses:
+    cursor.execute("SELECT date, category, amount FROM expenses ORDER BY date DESC")
+    rows = cursor.fetchall()
+    if not rows:
         print("No expenses recorded.\n")
         return
+
     print("\n All Expenses:")
-    for i, exp in enumerate(expenses, 1):
-        print(f"{i}. {exp['date']} | {exp['category']} | Rs {exp['amount']:.2f}")
+    for i, exp in enumerate(rows, 1):
+        print(f"{i}. {exp[0]} | {exp[1]} | Rs {exp[2]:.2f}")
     print()
+
 # Show total spent
 def show_total():
-    total = sum(exp["amount"] for exp in expenses)
+    cursor.execute("SELECT SUM(amount) FROM expenses")
+    total = cursor.fetchone()[0] or 0
     print(f"\n Total spent: Rs {total:.2f}\n")
-# Show filtered data
-def show_expenses_filtered(data):
-    if not data:
+
+# Filtered data
+def show_expenses_filtered(filtered_rows):
+    if not filtered_rows:
         print("No expenses to show.")
         return
-    for e in data:
-        print(f"{e['date']} | {e['category']} | ${e['amount']}")
+    for row in filtered_rows:
+        print(f"{row[0]} | {row[1]} | Rs {row[2]:.2f}")
+
 # Filter by month
 def filter_by_month():
     month = input('Enter Month (MM): ')
-    year = input('Enter Year (YYYY)')
-    filtered = [e for e in expenses if e['date'].startswith(f"{year}-{month}")]
-    show_expenses_filtered(filtered)
-# Filter by Category
+    year = input('Enter Year (YYYY): ')
+    cursor.execute("SELECT date, category, amount FROM expenses WHERE strftime('%Y-%m', date) = ?", (f"{year}-{month}",))
+    rows = cursor.fetchall()
+    show_expenses_filtered(rows)
+
+# Filter by category
 def filter_by_category():
     category = input("Enter category to filter: ").lower()
-    filtered = [e for e in expenses if e['category'].lower()== category]
-    show_expenses_filtered(filtered)
-# menu
+    cursor.execute("SELECT date, category, amount FROM expenses WHERE lower(category) = ?", (category,))
+    rows = cursor.fetchall()
+    show_expenses_filtered(rows)
+
+# Menu 
 def menu():
     while True:
         print("=== Expense Tracker ===")
@@ -137,8 +151,8 @@ def menu():
         print("2. View Expenses")
         print("3. Filter by Month")
         print("4. Filter by Category")
-        print("5. Export to csv")
-        print("6. Import from csv")
+        print("5. Export to CSV")
+        print("6. Import from CSV")
         print("7. Show Total Spent")
         print("8. Plot Monthly Chart")
         print("9. Exit")
@@ -166,6 +180,9 @@ def menu():
         else:
             print("Invalid choice. Try again.\n")
 
-# Start app
-expenses = load_expenses()
+# Start the app
 menu()
+
+# Close DB on exit
+conn.close()
+
