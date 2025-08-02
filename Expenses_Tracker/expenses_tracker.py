@@ -22,7 +22,7 @@ conn.commit()
 # Main app window
 root = tk.Tk()
 root.title("Expense Tracker")
-root.geometry("800x500")
+root.geometry("1000x800")
 root.resizable(False, False)
 
 # ----- FUNCTIONS -----
