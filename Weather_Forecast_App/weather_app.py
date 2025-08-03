@@ -90,28 +90,29 @@ def apply_theme():
     round_rectangle(search_canvas, 80, 30, 320, 70, radius=20, fill=entry_bg, outline=border_color)
     search_canvas.create_window(200, 50, window=city_entry, width=230, height=30)
 
-    round_rectangle(search_canvas, 360, 30, 510, 70, radius=20, fill=btn_bg, outline="")
+    round_rectangle(search_canvas, 360, 30, 510, 70, radius=20, fill=btn_bg, outline="")  # Rounded Button
     search_canvas.create_window(435, 50, window=get_btn, width=140, height=30)
 
     city_entry.config(bg=entry_bg, fg=fg_color, insertbackground=fg_color)
     get_btn.config(bg=btn_bg, fg="white", activebackground=btn_bg)
 
-    theme_btn.config(bg=btn_bg, fg="white", activebackground=btn_bg)
-
     canvas.config(bg=bg_color)
     canvas.delete("all")
 
-    round_rectangle(canvas, 10, 10, 590, 340, radius=30, fill=card_bg, outline=border_color)
-    canvas.create_window(300, 175, window=result_frame)
+    round_rectangle(canvas, 10, 10, 590, 440, radius=30, fill=card_bg, outline=border_color)
+    canvas.create_window(300, 225, window=result_frame)
 
     result_frame.config(bg=card_bg)
     result_label.config(bg=card_bg, fg=fg_color)
     icon_label.config(bg=card_bg)
 
+    toggle_canvas.config(bg=bg_color)
+    draw_toggle()
+
 # GUI
 root = tk.Tk()
 root.title("🌈 Weather Forecast App")
-root.geometry("750x650")
+root.geometry("750x700")
 root.config(bg="#eaf6ff")
 
 header = tk.Label(root, text="🌦 Weather Forecast", font=("Segoe UI", 26, "bold"), pady=20)
@@ -125,11 +126,35 @@ city_var = tk.StringVar()
 city_entry = tk.Entry(root, textvariable=city_var, font=("Segoe UI", 13), bd=0, justify='center')
 get_btn = tk.Button(root, text="Get Weather", font=("Segoe UI", 11, "bold"), bd=0, command=get_weather)
 
-theme_btn = tk.Button(root, text="🌙 Toggle Dark Mode", font=("Segoe UI", 10), bd=0, command=toggle_theme)
-theme_btn.pack(pady=5)
+# Theme Toggle Switch
+def draw_toggle():
+    toggle_canvas.delete("all")
+    bg = "#4a4a4a" if dark_mode else "#ddd"
+    knob_pos = (32, 2, 58, 28) if dark_mode else (2, 2, 28, 28)
+    emoji_pos = (10, 15) if dark_mode else (50, 15)
+    emoji = "🌙" if dark_mode else "☀️"
+    emoji_color = "white" if dark_mode else "black"
+
+    # Rounded switch background
+    toggle_canvas.create_oval(0, 0, 30, 30, fill=bg, outline=bg)
+    toggle_canvas.create_oval(30, 0, 60, 30, fill=bg, outline=bg)
+    toggle_canvas.create_rectangle(15, 0, 45, 30, fill=bg, outline=bg)
+
+    # Knob
+    toggle_canvas.create_oval(*knob_pos, fill="#ffffff", outline="#cccccc")
+
+    # Emoji
+    toggle_canvas.create_text(*emoji_pos, text=emoji, fill=emoji_color, font=("Segoe UI", 10, "bold"))
+
+def toggle_theme_switch(event=None):
+    toggle_theme()
+
+toggle_canvas = tk.Canvas(root, width=60, height=30, highlightthickness=0, bg="#eaf6ff")
+toggle_canvas.pack(pady=5)
+toggle_canvas.bind("<Button-1>", toggle_theme_switch)
 
 # Info Card
-canvas = tk.Canvas(root, width=600, height=350, bd=0, highlightthickness=0)
+canvas = tk.Canvas(root, width=600, height=450, bd=0, highlightthickness=0)
 canvas.pack()
 
 result_frame = tk.Frame(canvas, bg="white")
@@ -141,6 +166,7 @@ result_label.pack(pady=5)
 
 footer = tk.Label(root, text="Powered by OpenWeatherMap", font=("Segoe UI", 10), fg="#777")
 footer.pack(side="bottom", pady=15)
-# Applying theme on start
+
+# Initial styling
 apply_theme()
 root.mainloop()
