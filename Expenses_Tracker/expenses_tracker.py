@@ -5,7 +5,6 @@ import csv
 from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
-
 # Database setup
 conn = sqlite3.connect("expenses.db")
 cursor = conn.cursor()
@@ -18,21 +17,11 @@ CREATE TABLE IF NOT EXISTS expenses (
 )
 """)
 conn.commit()
-
 # Main app window
 root = tk.Tk()
 root.title("Expense Tracker")
-root.geometry("1000x900")
-root.configure(bg="#f2f2f2")
-
-# ----- STYLING -----
-style = ttk.Style(root)
-style.theme_use("clam")
-style.configure("TButton", font=("Segoe UI", 10), padding=6)
-style.configure("TLabel", font=("Segoe UI", 10))
-style.configure("Treeview.Heading", font=("Segoe UI", 10, "bold"))
-style.configure("Treeview", font=("Segoe UI", 10), rowheight=25)
-
+root.geometry("1000x800")
+root.resizable(False, False)
 # ----- FUNCTIONS -----
 def refresh_tree():
     for row in tree.get_children():
@@ -40,7 +29,6 @@ def refresh_tree():
     cursor.execute("SELECT id, date, category, amount FROM expenses ORDER BY date DESC")
     for row in cursor.fetchall():
         tree.insert('', 'end', values=row)
-
 def add_expense():
     date = entry_date.get() or datetime.now().strftime("%Y-%m-%d")
     category = entry_category.get()
@@ -49,24 +37,24 @@ def add_expense():
     except ValueError:
         messagebox.showerror("Error", "Invalid amount.")
         return
-    cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)", (date, category, amount))
+    cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)",
+                   (date, category, amount))
     conn.commit()
     entry_date.delete(0, tk.END)
     entry_category.delete(0, tk.END)
     entry_amount.delete(0, tk.END)
     refresh_tree()
-
 def delete_expense():
     selected = tree.selection()
     if not selected:
         messagebox.showwarning("Select", "Select a row to delete.")
         return
     exp_id = tree.item(selected[0])['values'][0]
-    if messagebox.askyesno("Confirm", f"Delete expense #{exp_id}?"):
+    confirm = messagebox.askyesno("Confirm", f"Delete expense #{exp_id}?")
+    if confirm:
         cursor.execute("DELETE FROM expenses WHERE id=?", (exp_id,))
         conn.commit()
         refresh_tree()
-
 def edit_expense():
     selected = tree.selection()
     if not selected:
@@ -74,10 +62,6 @@ def edit_expense():
         return
     item = tree.item(selected[0])
     exp_id, old_date, old_cat, old_amt = item['values']
-    top = tk.Toplevel(root)
-    top.title("Edit Expense")
-    top.geometry("300x200")
-
     def save_changes():
         new_date = e_date.get() or old_date
         new_cat = e_cat.get() or old_cat
@@ -91,58 +75,45 @@ def edit_expense():
         conn.commit()
         top.destroy()
         refresh_tree()
-
-    ttk.Label(top, text="Date:").pack(pady=5)
-    e_date = ttk.Entry(top)
+    top = tk.Toplevel(root)
+    top.title("Edit Expense")
+    tk.Label(top, text="Date (YYYY-MM-DD):").pack()
+    e_date = tk.Entry(top)
     e_date.insert(0, old_date)
     e_date.pack()
-
-    ttk.Label(top, text="Category:").pack(pady=5)
-    e_cat = ttk.Entry(top)
+    tk.Label(top, text="Category:").pack()
+    e_cat = tk.Entry(top)
     e_cat.insert(0, old_cat)
     e_cat.pack()
-
-    ttk.Label(top, text="Amount:").pack(pady=5)
-    e_amt = ttk.Entry(top)
+    tk.Label(top, text="Amount:").pack()
+    e_amt = tk.Entry(top)
     e_amt.insert(0, str(old_amt))
     e_amt.pack()
-
-    ttk.Button(top, text="Save", command=save_changes).pack(pady=10)
-
+    tk.Button(top, text="Save Changes", command=save_changes).pack(pady=10)
 def show_total():
     cursor.execute("SELECT SUM(amount) FROM expenses")
     total = cursor.fetchone()[0] or 0
     messagebox.showinfo("Total Spent", f"Total: Rs {total:.2f}")
-
 def filter_by_month():
-    f = tk.Toplevel(root)
-    f.title("Filter by Month")
-    f.geometry("250x150")
-
     def apply_filter():
         m = month.get()
         y = year.get()
         tree.delete(*tree.get_children())
-        cursor.execute("SELECT id, date, category, amount FROM expenses WHERE strftime('%Y-%m', date)=?", (f"{y}-{m}",))
+        cursor.execute("SELECT id, date, category, amount FROM expenses WHERE strftime('%Y-%m', date)=?",
+                       (f"{y}-{m}",))
         for row in cursor.fetchall():
             tree.insert('', 'end', values=row)
         f.destroy()
-
-    ttk.Label(f, text="Month (MM):").pack(pady=5)
-    month = ttk.Entry(f)
-    month.pack()
-
-    ttk.Label(f, text="Year (YYYY):").pack(pady=5)
-    year = ttk.Entry(f)
-    year.pack()
-
-    ttk.Button(f, text="Apply", command=apply_filter).pack(pady=10)
-
-def filter_by_category():
     f = tk.Toplevel(root)
-    f.title("Filter by Category")
-    f.geometry("250x120")
-
+    f.title("Filter by Month")
+    tk.Label(f, text="Month (MM):").pack()
+    month = tk.Entry(f)
+    month.pack()
+    tk.Label(f, text="Year (YYYY):").pack()
+    year = tk.Entry(f)
+    year.pack()
+    tk.Button(f, text="Apply", command=apply_filter).pack(pady=10)
+def filter_by_category():
     def apply_filter():
         c = category.get().lower()
         tree.delete(*tree.get_children())
@@ -150,81 +121,77 @@ def filter_by_category():
         for row in cursor.fetchall():
             tree.insert('', 'end', values=row)
         f.destroy()
-
-    ttk.Label(f, text="Category:").pack(pady=5)
-    category = ttk.Entry(f)
+    f = tk.Toplevel(root)
+    f.title("Filter by Category")
+    tk.Label(f, text="Category:").pack()
+    category = tk.Entry(f)
     category.pack()
-    ttk.Button(f, text="Apply", command=apply_filter).pack(pady=10)
-
+    tk.Button(f, text="Apply", command=apply_filter).pack(pady=10)
 def export_csv():
     filename = filedialog.asksaveasfilename(defaultextension=".csv")
     if not filename:
         return
     cursor.execute("SELECT date, category, amount FROM expenses")
     rows = cursor.fetchall()
-    with open(filename, "w", newline="") as file:
-        writer = csv.writer(file)
-        writer.writerow(["date", "category", "amount"])
-        writer.writerows(rows)
-    messagebox.showinfo("Exported", f"Exported to {filename}")
-
+    try:
+        with open(filename, "w", newline="") as file:
+            writer = csv.writer(file)
+            writer.writerow(["date", "category", "amount"])
+            writer.writerows(rows)
+        messagebox.showinfo("Success", f"Exported to {filename}")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
 def import_csv():
     filename = filedialog.askopenfilename(filetypes=[("CSV files", "*.csv")])
     if not filename:
         return
-    with open(filename, "r") as file:
-        reader = csv.DictReader(file)
-        count = 0
-        for row in reader:
-            cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)",
-                           (row["date"], row["category"], float(row["amount"])))
-            count += 1
-        conn.commit()
-        refresh_tree()
-    messagebox.showinfo("Imported", f"Imported {count} records.")
-
+    try:
+        with open(filename, "r") as file:
+            reader = csv.DictReader(file)
+            count = 0
+            for row in reader:
+                cursor.execute("INSERT INTO expenses (date, category, amount) VALUES (?, ?, ?)",
+                               (row["date"], row["category"], float(row["amount"])))
+                count += 1
+            conn.commit()
+            refresh_tree()
+        messagebox.showinfo("Imported", f"Imported {count} records.")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
 def plot_chart():
     cursor.execute("SELECT date, amount FROM expenses")
     rows = cursor.fetchall()
     if not rows:
-        messagebox.showinfo("No Data", "No data to plot.")
+        messagebox.showinfo("Info", "No data to plot.")
         return
     monthly = defaultdict(float)
     for date, amt in rows:
         monthly[date[:7]] += amt
-    months = sorted(monthly)
+    months = sorted(monthly.keys())
     totals = [monthly[m] for m in months]
-
-    plt.figure(figsize=(9, 5))
-    plt.plot(months, totals, marker='o', color='#880e4f')
-    plt.title("Monthly Expense Trend", fontsize=14)
-    plt.xlabel("Month", fontsize=12)
-    plt.ylabel("Amount (Rs)", fontsize=12)
+    plt.figure(figsize=(8, 4))
+    plt.plot(months, totals, marker='o', color='purple')
+    plt.title("Monthly Expenses")
+    plt.xlabel("Month")
+    plt.ylabel("Amount (Rs)")
     plt.grid(True)
     plt.tight_layout()
     plt.show()
-
-# ----- UI LAYOUT -----
-frame_top = ttk.Frame(root)
+# ----- UI Layout -----
+frame_top = tk.Frame(root)
 frame_top.pack(pady=10)
-
-ttk.Label(frame_top, text="Date (YYYY-MM-DD):").grid(row=0, column=0, padx=5)
-entry_date = ttk.Entry(frame_top, width=15)
+tk.Label(frame_top, text="Date (YYYY-MM-DD):").grid(row=0, column=0)
+entry_date = tk.Entry(frame_top)
 entry_date.grid(row=0, column=1)
-
-ttk.Label(frame_top, text="Category:").grid(row=0, column=2, padx=5)
-entry_category = ttk.Entry(frame_top, width=15)
+tk.Label(frame_top, text="Category:").grid(row=0, column=2)
+entry_category = tk.Entry(frame_top)
 entry_category.grid(row=0, column=3)
-
-ttk.Label(frame_top, text="Amount:").grid(row=0, column=4, padx=5)
-entry_amount = ttk.Entry(frame_top, width=12)
+tk.Label(frame_top, text="Amount:").grid(row=0, column=4)
+entry_amount = tk.Entry(frame_top)
 entry_amount.grid(row=0, column=5)
-
-ttk.Button(frame_top, text="Add Expense", command=add_expense).grid(row=0, column=6, padx=10)
-
-frame_btns = ttk.Frame(root)
+tk.Button(frame_top, text="Add Expense", command=add_expense).grid(row=0, column=6, padx=10)
+frame_btns = tk.Frame(root)
 frame_btns.pack(pady=10)
-
 btns = [
     ("Edit", edit_expense),
     ("Delete", delete_expense),
@@ -236,16 +203,17 @@ btns = [
     ("Plot Chart", plot_chart),
     ("Refresh", refresh_tree),
 ]
-
 for i, (text, cmd) in enumerate(btns):
-    ttk.Button(frame_btns, text=text, command=cmd).grid(row=0, column=i, padx=4, pady=2)
-
+    tk.Button(frame_btns, text=text, command=cmd, width=14).grid(row=0, column=i, padx=3)
+# Expense list
 tree = ttk.Treeview(root, columns=("ID", "Date", "Category", "Amount"), show="headings")
-for col in ("ID", "Date", "Category", "Amount"):
-    tree.heading(col, text=col)
-    tree.column(col, anchor="center")
-tree.pack(fill="both", expand=True, padx=15, pady=10)
-
+tree.heading("ID", text="ID")
+tree.heading("Date", text="Date")
+tree.heading("Category", text="Category")
+tree.heading("Amount", text="Amount")
+tree.pack(expand=True, fill="both", pady=10)
 refresh_tree()
 root.mainloop()
 conn.close()
+
+
