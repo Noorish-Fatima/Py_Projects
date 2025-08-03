@@ -5,7 +5,9 @@ import csv
 from datetime import datetime
 from collections import defaultdict
 import matplotlib.pyplot as plt
-# Database setup
+from tkinter import font
+
+# --- Database setup ---
 conn = sqlite3.connect("expenses.db")
 cursor = conn.cursor()
 cursor.execute("""
@@ -17,11 +19,47 @@ CREATE TABLE IF NOT EXISTS expenses (
 )
 """)
 conn.commit()
-# Main app window
+
+# --- Main app window ---
 root = tk.Tk()
 root.title("Expense Tracker")
-root.geometry("1000x800")
-root.resizable(False, False)
+root.geometry("1000x900")
+root.configure(bg="#f2f2f2")
+root.option_add("*Button.Background", "#898D87")
+root.option_add("*Button.ActiveBackground", "#D4EAD3")
+root.option_add("*Button.BorderWidth", 1)
+
+# --- Styling ---
+style = ttk.Style(root)
+style.theme_use("clam")
+
+# Excel-style Treeview
+style.configure("Treeview",
+    background="white",
+    foreground="black",
+    rowheight=28,
+    fieldbackground="white",
+    font=('Calibri', 11)
+)
+style.configure("Treeview.Heading",
+    background="#C3BFBFFF",  # Excel header color
+    foreground="black",
+    font=('Calibri', 12, 'bold')
+)
+style.map('Treeview',
+    background=[('selected', "#C6D8EF")],
+    foreground=[('selected', 'black')]
+)
+
+# Default fonts
+default_font = font.nametofont("TkDefaultFont")
+default_font.configure(family="Calibri", size=11)
+root.option_add("*Font", default_font)
+
+style.configure("TButton", font=("Segoe UI", 10), padding=6)
+style.configure("TLabel", font=("Segoe UI", 10))
+
+
 # ----- FUNCTIONS -----
 def refresh_tree():
     for row in tree.get_children():
@@ -29,6 +67,8 @@ def refresh_tree():
     cursor.execute("SELECT id, date, category, amount FROM expenses ORDER BY date DESC")
     for row in cursor.fetchall():
         tree.insert('', 'end', values=row)
+    tag_rows()  # Appling zebra striping
+
 def add_expense():
     date = entry_date.get() or datetime.now().strftime("%Y-%m-%d")
     category = entry_category.get()
@@ -204,14 +244,25 @@ btns = [
     ("Refresh", refresh_tree),
 ]
 for i, (text, cmd) in enumerate(btns):
-    tk.Button(frame_btns, text=text, command=cmd, width=14).grid(row=0, column=i, padx=3)
-# Expense list
-tree = ttk.Treeview(root, columns=("ID", "Date", "Category", "Amount"), show="headings")
-tree.heading("ID", text="ID")
-tree.heading("Date", text="Date")
-tree.heading("Category", text="Category")
-tree.heading("Amount", text="Amount")
-tree.pack(expand=True, fill="both", pady=10)
+    ttk.Button(frame_btns, text=text, command=cmd).grid(row=0, column=i, padx=4, pady=2)
+
+tree = ttk.Treeview(root, columns=("ID", "Date", "Category", "Amount"), show="headings", selectmode="browse")
+for col in ("ID", "Date", "Category", "Amount"):
+    tree.heading(col, text=col)
+    tree.column(col, anchor="center")
+    # Setting column widths and alignments
+    tree.column("ID", anchor="center", width=50)
+    tree.column("Date", anchor="center", width=100)
+    tree.column("Category", anchor="w", width=150)
+    tree.column("Amount", anchor="e", width=100)
+tree.pack(fill="both", expand=True, padx=15, pady=10)
+def tag_rows():
+    for i, row in enumerate(tree.get_children()):
+        tree.item(row, tags=('evenrow' if i % 2 == 0 else 'oddrow'))
+
+tree.tag_configure('evenrow', background='#F2F2F2')  # Light gray
+tree.tag_configure('oddrow', background='white')
+
 refresh_tree()
 root.mainloop()
 conn.close()
