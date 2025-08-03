@@ -1,6 +1,7 @@
  simple desktop expense tracking app built using Python Tkinter and SQLite, styled like an Excel spreadsheet. It allows users to add, edit, delete, filter, and visualize expenses easily through a user-friendly interface.
 
 ------ Features -----------
+----
 - Add Expenses — Add new entries with date, category, and amount.
 
 - Edit & Delete — Modify or remove any existing entry.
@@ -21,9 +22,10 @@
 
 - Auto ID & Ordering — Expenses are stored with auto-increment IDs and shown in reverse chronological order.
 
-- Excel-Styled UI — Spreadsheet-like look using ttk.Treeview, alternating row colors, light green headers, and clean layout.
+- Excel-Styled UI — Spreadsheet-like look using ttk.Treeview, alternating row colors,light grey headers, and clean layout.
 
 ------- Tech Stack ---------
+----
 **Frontend: Tkinter GUI
 **Backend: SQLite database
 
