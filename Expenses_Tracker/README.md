@@ -1,3 +1,5 @@
+Tkinter Expense Tracker App
+----
  simple desktop expense tracking app built using Python Tkinter and SQLite, styled like an Excel spreadsheet. It allows users to add, edit, delete, filter, and visualize expenses easily through a user-friendly interface.
 
 ------ Features -----------
