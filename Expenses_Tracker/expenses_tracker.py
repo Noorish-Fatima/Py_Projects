@@ -25,7 +25,7 @@ root = tk.Tk()
 root.title("Expense Tracker")
 root.geometry("1000x900")
 root.configure(bg="#f2f2f2")
-root.option_add("*Button.Background", "#898D87")
+root.option_add("*Button.Background", "#C3bfbf")
 root.option_add("*Button.ActiveBackground", "#D4EAD3")
 root.option_add("*Button.BorderWidth", 1)
 
