@@ -48,11 +48,11 @@ def get_weather():
         country = data["sys"]["country"]
 
         result = (
-            f"📍 City: {city.title()}, {country}\n"
-            f"🌤 Weather: {weather}\n"
-            f"🌡 Temperature: {temp} °C\n"
-            f"💧 Humidity: {humidity}%\n"
-            f"🌬 Wind Speed: {wind} m/s"
+            f"City: {city.title()}, {country}\n"
+            f"Weather: {weather}\n"
+            f"Temperature: {temp} °C\n"
+            f"Humidity: {humidity}%\n"
+            f"Wind Speed: {wind} m/s"
         )
         result_label.config(text=result)
 
@@ -111,11 +111,11 @@ def apply_theme():
 
 # GUI
 root = tk.Tk()
-root.title("🌈 Weather Forecast App")
+root.title("Weather Forecast App")
 root.geometry("750x700")
 root.config(bg="#eaf6ff")
 
-header = tk.Label(root, text="🌦 Weather Forecast", font=("Segoe UI", 26, "bold"), pady=20)
+header = tk.Label(root, text="weather Forecast", font=("Segoe UI", 26, "bold"), pady=20)
 header.pack(fill='x')
 
 # Search section
@@ -170,3 +170,7 @@ footer.pack(side="bottom", pady=15)
 # Initial styling
 apply_theme()
 root.mainloop()
+
+
+
+#ver8
